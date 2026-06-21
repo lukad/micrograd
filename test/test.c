@@ -111,7 +111,7 @@ static void test_pow(void) {
 
     expect_close("pow data", mg_data(out), 64.0f);
     expect_close("pow base grad", mg_grad(base), 48.0f);
-    expect_close("pow exponent grad", mg_grad(exponent), 0.0f);
+    expect_close("pow exponent grad", mg_grad(exponent), 64.0f * logf(4.0f));
 
     mg_graph_free(g);
 }

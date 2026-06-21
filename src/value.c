@@ -257,6 +257,7 @@ bool mg_backward(mg_graph* g, mg_value* out) {
                 v->left->grad += v->right->data *
                                  powf(v->left->data, v->right->data - 1.0f) *
                                  v->grad;
+                v->right->grad += v->data * logf(v->left->data) * v->grad;
                 break;
             case MG_OP_RELU:
                 v->left->grad += (v->data > 0.0) * v->grad;
