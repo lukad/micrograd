@@ -72,6 +72,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
         mg_graph_restore(g, params_checkpoint);
     }
 
+    free(params);
     mg_mlp_free(&n);
     mg_graph_free(g);
 
