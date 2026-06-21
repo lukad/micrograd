@@ -9,36 +9,38 @@ static float rand_uniform(float lo, float hi) {
     return lo + t * (hi - lo);
 }
 
-bool mg_neuron_init(mg_graph* g,
-                    mg_neuron* n,
-                    size_t n_in,
-                    bool non_linear) {
-    n->n_in = n_in;
-    n->non_linear = non_linear;
+bool mg_neuron_init(mg_graph* g, mg_neuron* n, size_t n_in, bool non_linear) {
+    mg_graph_checkpoint checkpoint = mg_graph_save(g);
+    *n = (mg_neuron){0};
+
     n->w = calloc(n_in, sizeof(*n->w));
     if (!n->w) {
-        return false;
+        goto fail;
     }
+
+    n->n_in = n_in;
+    n->non_linear = non_linear;
 
     float limit = 1.0f / sqrtf((float)n_in);
 
     for (size_t i = 0; i < n_in; i++) {
         n->w[i] = mg_scalar(g, rand_uniform(-limit, limit));
         if (!n->w[i]) {
-            free(n->w);
-            n->w = NULL;
-            return false;
+            goto fail;
         }
     }
 
     n->b = mg_scalar(g, 0.0);
     if (!n->b) {
-        free(n->w);
-        n->w = NULL;
-        return false;
+        goto fail;
     }
 
     return true;
+
+fail:
+    mg_neuron_free(n);
+    mg_graph_restore(g, checkpoint);
+    return false;
 }
 
 void mg_neuron_free(mg_neuron* n) {

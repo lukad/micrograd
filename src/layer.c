@@ -8,20 +8,29 @@ bool mg_layer_init(mg_graph* g,
                    size_t n_in,
                    size_t n_out,
                    bool non_linear) {
-    l->n_in = n_in;
-    l->n_out = n_out;
+    mg_graph_checkpoint checkpoint = mg_graph_save(g);
+    *l = (mg_layer){0};
+
     l->neurons = calloc(n_out, sizeof(*l->neurons));
     if (!l->neurons) {
-        return false;
+        goto fail;
     }
+
+    l->n_in = n_in;
+    l->n_out = n_out;
 
     for (size_t i = 0; i < n_out; i++) {
         if (!mg_neuron_init(g, &l->neurons[i], n_in, non_linear)) {
-            return false;
+            goto fail;
         }
     }
 
     return true;
+
+fail:
+    mg_layer_free(l);
+    mg_graph_restore(g, checkpoint);
+    return false;
 }
 
 bool mg_layer_call(mg_graph* g, mg_layer* l, mg_value** x, mg_value** out) {

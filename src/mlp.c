@@ -8,24 +8,33 @@ bool mg_mlp_init(mg_graph* g,
                  size_t n_in,
                  const size_t* sizes,
                  size_t n_sizes) {
-    m->n_layers = n_sizes;
+    mg_graph_checkpoint checkpoint = mg_graph_save(g);
+    *m = (mg_mlp){0};
+
     m->layers = calloc(n_sizes, sizeof(*m->layers));
     if (!m->layers) {
-        return false;
+        goto fail;
     }
+
+    m->n_layers = n_sizes;
 
     size_t layer_in = n_in;
 
     for (size_t i = 0; i < n_sizes; i++) {
         bool non_linear = i + 1 < n_sizes;
         if (!mg_layer_init(g, &m->layers[i], layer_in, sizes[i], non_linear)) {
-            return false;
+            goto fail;
         }
 
         layer_in = sizes[i];
     }
 
     return true;
+
+fail:
+    mg_mlp_free(m);
+    mg_graph_restore(g, checkpoint);
+    return false;
 }
 
 bool mg_mlp_call(mg_graph* g, mg_mlp* m, mg_value** x, mg_value** out) {

@@ -126,7 +126,23 @@ mg_value* mg_add(mg_graph* g, mg_value* a, mg_value* b) {
 }
 
 mg_value* mg_sub(mg_graph* g, mg_value* a, mg_value* b) {
-    return mg_add(g, a, mg_neg(g, b));
+    mg_graph_checkpoint checkpoint = mg_graph_save(g);
+
+    mg_value* neg = mg_neg(g, b);
+    if (!neg) {
+        goto fail;
+    }
+
+    mg_value* out = mg_add(g, a, neg);
+    if (!out) {
+        goto fail;
+    }
+
+    return out;
+
+fail:
+    mg_graph_restore(g, checkpoint);
+    return NULL;
 }
 
 mg_value* mg_mul(mg_graph* g, mg_value* a, mg_value* b) {
@@ -143,12 +159,28 @@ mg_value* mg_mul(mg_graph* g, mg_value* a, mg_value* b) {
 }
 
 mg_value* mg_div(mg_graph* g, mg_value* a, mg_value* b) {
-    mg_value* inv = mg_pow(g, b, mg_scalar(g, -1.0));
-    if (!inv) {
-        return NULL;
+    mg_graph_checkpoint checkpoint = mg_graph_save(g);
+
+    mg_value* minus_one = mg_scalar(g, -1.0f);
+    if (!minus_one) {
+        goto fail;
     }
 
-    return mg_mul(g, a, inv);
+    mg_value* inv = mg_pow(g, b, minus_one);
+    if (!inv) {
+        goto fail;
+    }
+
+    mg_value* out = mg_mul(g, a, inv);
+    if (!out) {
+        goto fail;
+    }
+
+    return out;
+
+fail:
+    mg_graph_restore(g, checkpoint);
+    return NULL;
 }
 
 mg_value* mg_pow(mg_graph* g, mg_value* a, mg_value* b) {
@@ -165,7 +197,23 @@ mg_value* mg_pow(mg_graph* g, mg_value* a, mg_value* b) {
 }
 
 mg_value* mg_neg(mg_graph* g, mg_value* a) {
-    return mg_mul(g, a, mg_scalar(g, -1.0));
+    mg_graph_checkpoint checkpoint = mg_graph_save(g);
+
+    mg_value* minus_one = mg_scalar(g, -1.0f);
+    if (!minus_one) {
+        goto fail;
+    }
+
+    mg_value* out = mg_mul(g, a, minus_one);
+    if (!out) {
+        goto fail;
+    }
+
+    return out;
+
+fail:
+    mg_graph_restore(g, checkpoint);
+    return NULL;
 }
 
 mg_value* mg_square(mg_graph* g, mg_value* a) {
