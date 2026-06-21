@@ -17,7 +17,8 @@ bool mg_mlp_init(mg_graph* g,
     size_t layer_in = n_in;
 
     for (size_t i = 0; i < n_sizes; i++) {
-        if (!mg_layer_init(g, &m->layers[i], layer_in, sizes[i])) {
+        bool non_linear = i + 1 < n_sizes;
+        if (!mg_layer_init(g, &m->layers[i], layer_in, sizes[i], non_linear)) {
             return false;
         }
 

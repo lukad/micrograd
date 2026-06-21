@@ -301,7 +301,7 @@ static void test_neuron(void) {
     mg_graph* g = mg_graph_new();
     mg_neuron n = {0};
 
-    if (!mg_neuron_init(g, &n, 2)) {
+    if (!mg_neuron_init(g, &n, 2, true)) {
         fprintf(stderr, "mg_neuron_init failed\n");
         exit(EXIT_FAILURE);
     }
@@ -337,11 +337,49 @@ static void test_neuron(void) {
     mg_graph_free(g);
 }
 
+static void test_linear_neuron(void) {
+    mg_graph* g = mg_graph_new();
+    mg_neuron n = {0};
+
+    if (!mg_neuron_init(g, &n, 2, false)) {
+        fprintf(stderr, "mg_neuron_init failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    mg_value* params[3];
+    mg_neuron_params(&n, params);
+    mg_set_data(params[0], 0.5f);
+    mg_set_data(params[1], -1.0f);
+    mg_set_data(params[2], 0.25f);
+
+    mg_value* x[] = {
+        mg_scalar(g, 2.0f),
+        mg_scalar(g, 3.0f),
+    };
+    mg_value* out = mg_neuron_call(g, &n, x);
+    float preact = 0.5f * 2.0f + -1.0f * 3.0f + 0.25f;
+
+    if (!mg_backward(g, out)) {
+        fprintf(stderr, "mg_backward failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    expect_close("linear neuron data", mg_data(out), preact);
+    expect_close("linear neuron w0 grad", mg_grad(params[0]), 2.0f);
+    expect_close("linear neuron w1 grad", mg_grad(params[1]), 3.0f);
+    expect_close("linear neuron bias grad", mg_grad(params[2]), 1.0f);
+    expect_close("linear neuron x0 grad", mg_grad(x[0]), 0.5f);
+    expect_close("linear neuron x1 grad", mg_grad(x[1]), -1.0f);
+
+    mg_neuron_free(&n);
+    mg_graph_free(g);
+}
+
 static void test_layer(void) {
     mg_graph* g = mg_graph_new();
     mg_layer l = {0};
 
-    if (!mg_layer_init(g, &l, 2, 3)) {
+    if (!mg_layer_init(g, &l, 2, 3, true)) {
         fprintf(stderr, "mg_layer_init failed\n");
         exit(EXIT_FAILURE);
     }
@@ -415,7 +453,9 @@ static void test_mlp(void) {
     float hidden1 = tanhf(-0.5f);
 
     expect_close("mlp param count", mg_mlp_param_count(&m), 9.0f);
-    expect_close("mlp out", mg_data(out[0]), tanhf(hidden0 + hidden1));
+    expect_true("mlp hidden layer is nonlinear", m.layers[0].neurons[0].non_linear);
+    expect_true("mlp output layer is linear", !m.layers[1].neurons[0].non_linear);
+    expect_close("mlp out", mg_data(out[0]), hidden0 + hidden1);
 
     mg_mlp_free(&m);
     mg_graph_free(g);
@@ -434,6 +474,7 @@ int main(void) {
     test_graph_checkpoint_restore();
     test_training_checkpoint_reuse();
     test_neuron();
+    test_linear_neuron();
     test_layer();
     test_mlp();
 

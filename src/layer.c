@@ -3,7 +3,11 @@
 #include "micrograd/layer.h"
 #include "micrograd/value.h"
 
-bool mg_layer_init(mg_graph* g, mg_layer* l, size_t n_in, size_t n_out) {
+bool mg_layer_init(mg_graph* g,
+                   mg_layer* l,
+                   size_t n_in,
+                   size_t n_out,
+                   bool non_linear) {
     l->n_in = n_in;
     l->n_out = n_out;
     l->neurons = calloc(n_out, sizeof(*l->neurons));
@@ -12,7 +16,7 @@ bool mg_layer_init(mg_graph* g, mg_layer* l, size_t n_in, size_t n_out) {
     }
 
     for (size_t i = 0; i < n_out; i++) {
-        if (!mg_neuron_init(g, &l->neurons[i], n_in)) {
+        if (!mg_neuron_init(g, &l->neurons[i], n_in, non_linear)) {
             return false;
         }
     }

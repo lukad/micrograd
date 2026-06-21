@@ -9,8 +9,12 @@ static float rand_uniform(float lo, float hi) {
     return lo + t * (hi - lo);
 }
 
-bool mg_neuron_init(mg_graph* g, mg_neuron* n, size_t n_in) {
+bool mg_neuron_init(mg_graph* g,
+                    mg_neuron* n,
+                    size_t n_in,
+                    bool non_linear) {
     n->n_in = n_in;
+    n->non_linear = non_linear;
     n->w = calloc(n_in, sizeof(*n->w));
     if (!n->w) {
         return false;
@@ -42,6 +46,7 @@ void mg_neuron_free(mg_neuron* n) {
     n->w = NULL;
     n->b = NULL;
     n->n_in = 0;
+    n->non_linear = false;
 }
 
 mg_value* mg_neuron_call(mg_graph* g, mg_neuron* n, mg_value** x) {
@@ -71,7 +76,11 @@ mg_value* mg_neuron_call(mg_graph* g, mg_neuron* n, mg_value** x) {
         }
     }
 
-    return mg_tanh(g, out);
+    if (n->non_linear) {
+        return mg_tanh(g, out);
+    }
+
+    return out;
 }
 
 size_t mg_neuron_param_count(const mg_neuron* n) {
