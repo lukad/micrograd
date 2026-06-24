@@ -12,6 +12,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 option(MICROGRAD_BUILD_EXAMPLES "Build micrograd examples" ON)
 option(MICROGRAD_BUILD_TESTS "Build micrograd tests" ON)
+option(MICROGRAD_BUILD_DOCS "Add a Doxygen documentation target" OFF)
 
 function(micrograd_set_warnings target)
     target_compile_options(${target}
@@ -62,4 +63,26 @@ if(MICROGRAD_BUILD_TESTS)
     micrograd_set_warnings(micrograd_tests)
 
     add_test(NAME micrograd_tests COMMAND micrograd_tests)
+endif()
+
+if(MICROGRAD_BUILD_DOCS)
+    find_package(Doxygen REQUIRED)
+
+    set(DOXYGEN_AWESOME_CSS
+        "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-awesome/doxygen-awesome.css"
+    )
+    set(DOXYFILE_IN "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in")
+    set(DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
+
+    configure_file("${DOXYFILE_IN}" "${DOXYFILE_OUT}" @ONLY)
+
+    add_custom_target(docs
+        COMMAND "${DOXYGEN_EXECUTABLE}" "${DOXYFILE_OUT}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/examples"
+            "${CMAKE_CURRENT_BINARY_DIR}/html/examples"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Generating Doxygen documentation"
+        VERBATIM
+    )
 endif()

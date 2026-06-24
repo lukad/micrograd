@@ -20,11 +20,29 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
+    },
+    {
+      "name": "docs",
+      "displayName": "Documentation",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/docs",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MICROGRAD_BUILD_EXAMPLES": "OFF",
+        "MICROGRAD_BUILD_TESTS": "OFF",
+        "MICROGRAD_BUILD_DOCS": "ON"
+      }
     }
   ],
   "buildPresets": [
     { "name": "debug", "configurePreset": "debug" },
-    { "name": "release", "configurePreset": "release" }
+    { "name": "release", "configurePreset": "release" },
+    {
+      "name": "docs",
+      "configurePreset": "docs",
+      "targets": [ "docs" ]
+    }
   ],
   "testPresets": [
     {

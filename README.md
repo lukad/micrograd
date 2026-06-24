@@ -13,6 +13,18 @@ ctest --preset debug
 ./build/debug/micrograd_basic
 ```
 
+## Documentation
+
+```sh
+cmake --preset docs
+cmake --build --preset docs
+open build/docs/html/index.html
+```
+
+The documentation target requires Doxygen. HTML output uses the vendored
+[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/) theme in
+`docs/doxygen-awesome`.
+
 ## Example
 
 ```c

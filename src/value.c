@@ -5,6 +5,9 @@
 
 #include "micrograd/value.h"
 
+/**
+ * @brief Operation that produced an `mg_value`.
+ */
 typedef enum {
     MG_OP_NONE,
     MG_OP_ADD,
@@ -15,21 +18,25 @@ typedef enum {
     MG_OP_EXP,
 } mg_op;
 
+/**
+ * @brief Concrete implementation of `mg_graph`.
+ */
 struct mg_graph {
-    mg_value* values;
-    size_t len;
+    mg_value* values; /**< Head of the graph-owned linked list. */
+    size_t len;       /**< Number of values in the graph. */
 };
 
+/**
+ * @brief Concrete implementation of `mg_value`.
+ */
 struct mg_value {
-    float data;
-    float grad;
-
-    mg_value* left;
-    mg_value* right;
-    mg_op op;
-
-    bool visited;
-    mg_value* next;
+    float data;       /**< Scalar data. */
+    float grad;       /**< Accumulated gradient. */
+    mg_value* left;   /**< Left parent operand, if any. */
+    mg_value* right;  /**< Right parent operand, if any. */
+    mg_op op;         /**< Operation that produced this value. */
+    bool visited;     /**< Whether this value has been visited in traversal. */
+    mg_value* next;   /**< Next graph-owned value in the linked list. */
 };
 
 mg_graph* mg_graph_new(void) {
@@ -78,6 +85,13 @@ void mg_graph_restore(mg_graph* g, mg_graph_checkpoint checkpoint) {
     g->len = checkpoint.len;
 }
 
+/**
+ * @brief Allocate a value and add it to a graph.
+ *
+ * @param g Graph that owns the new value.
+ * @param data Initial scalar data.
+ * @return The new value, or `NULL` if allocation fails.
+ */
 static mg_value* mg_value_alloc(mg_graph* g, double data) {
     mg_value* v = calloc(1, sizeof(*v));
     if (!v) {
